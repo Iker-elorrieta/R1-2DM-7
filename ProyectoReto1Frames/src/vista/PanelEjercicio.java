@@ -1,97 +1,228 @@
 package vista;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.SystemColor;
 import javax.swing.JPanel;
 import javax.swing.border.MatteBorder;
-import javax.swing.JLabel;
-import java.awt.Font;
-import java.awt.Image;
+
+import modelo.Cronometro;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import java.awt.Panel;
+import javax.swing.JTextArea;
 
 public class PanelEjercicio extends JPanel {
 
-	private static final long serialVersionUID = 1L;
-	// El color hay que cambiarlo a la main
-	// El tema 1 el el suave y el tema2 Es para el borde y para los botones
-	Color tema = new Color(50, 120, 215);
-	Color tema2 = new Color(112, 162, 199);
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * Create the panel.
-	 */
-	public PanelEjercicio() {
+    private JLabel lblNombreEjer, lblNombreWorkout, lblDescripcionEjercicioWorkouts;
+    private JButton btnSalir, btnIniciar;
+    private JLabel lblTiempoCronometro, lblTiempoCronometro_1, lblTiempoCronometro_2, lblImagen;
+    private Cronometro cronometro;
+    private int contBoton=0;
+    Color tema = new Color(50, 120, 215);
+    Color tema2 = new Color(112, 162, 199);
+    private JTextArea txtSeries;
 
-		setForeground(SystemColor.textHighlight);
-		setBorder(new MatteBorder(5, 25, 5, 25, (tema)));
-		setBackground(tema2);
-		setLayout(null);
+    /**
+     * Create the panel.
+     */
+    public PanelEjercicio() {
+        setForeground(SystemColor.textHighlight);
+        setBorder(new MatteBorder(5, 25, 5, 25, (tema)));
+        setBackground(tema2);
+        setLayout(null);
 
-		JLabel lblNombreEjercicio = new JLabel("NombreEjercicioSeleccionado y descripcion");
-		lblNombreEjercicio.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblNombreEjercicio.setBounds(215, 22, 407, 77);
-		add(lblNombreEjercicio);
+        btnSalir = new JButton("Salir");
+        btnSalir.setFont(new Font("Tahoma", Font.BOLD, 20));
+        btnSalir.setBackground(Color.RED);
+        btnSalir.setForeground(new Color(147, 0, 0));
+        btnSalir.setBounds(654, 512, 131, 41);
+        add(btnSalir);
 
-		JLabel lblNombreWorkout = new JLabel("NombreDelWorkout");
-		lblNombreWorkout.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblNombreWorkout.setBounds(692, 22, 276, 77);
-		add(lblNombreWorkout);
+        btnIniciar = new JButton("Iniciar");
+        btnIniciar.setForeground(new Color(0, 128, 0));
+        btnIniciar.setFont(new Font("Tahoma", Font.BOLD, 20));
+        btnIniciar.setBackground(new Color(0, 255, 0));
+        btnIniciar.setBounds(297, 512, 131, 41);
+        add(btnIniciar);
 
-		JLabel lblSerie_1 = new JLabel("Serie1");
-		lblSerie_1.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblSerie_1.setBounds(387, 207, 82, 33);
-		add(lblSerie_1);
+        Panel panel = new Panel();
+        panel.setBackground(Color.LIGHT_GRAY);
+        panel.setBounds(242, 158, 656, 337);
+        add(panel);
+        panel.setLayout(null);
+        
+        txtSeries = new JTextArea();
+        txtSeries.setBounds(10, 11, 621, 315);
+        panel.add(txtSeries);
 
-		JLabel lblSerie_2 = new JLabel("Serie2");
-		lblSerie_2.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblSerie_2.setBounds(387, 273, 82, 33);
-		add(lblSerie_2);
+        Panel panel_1 = new Panel();
+        panel_1.setBackground(SystemColor.menu);
+        panel_1.setBounds(31, 23, 205, 472);
+        add(panel_1);
+        panel_1.setLayout(null);
 
-		JLabel lblSerie_3 = new JLabel("Serie3");
-		lblSerie_3.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblSerie_3.setBounds(387, 331, 82, 33);
-		add(lblSerie_3);
+        JLabel lblCronometro = new JLabel("Cronómetro:");
+        lblCronometro.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblCronometro.setBounds(10, 169, 112, 44);
+        panel_1.add(lblCronometro);
 
-		JButton btnSalir = new JButton("Salir");
-		btnSalir.setFont(new Font("Tahoma", Font.BOLD, 20));
-		btnSalir.setBackground(Color.RED);
-		btnSalir.setForeground(Color.RED);
-		btnSalir.setBounds(837, 546, 131, 41);
-		add(btnSalir);
+        lblTiempoCronometro = new JLabel("00:00");
+        lblTiempoCronometro.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblTiempoCronometro.setBounds(20, 213, 112, 44);
+        panel_1.add(lblTiempoCronometro);
 
-		JLabel lblIMGConometro = new JLabel();
-		lblIMGConometro.setBounds(24, 11, 82, 77);
-		ImageIcon iconoOriginal = new ImageIcon("E:\\2DamElorrieta\\RETOOOO\\GymApp\\imagenes\\cronometro.png");
-		Image imagen = iconoOriginal.getImage();
-		Image imagenRedimensionada = imagen.getScaledInstance(lblIMGConometro.getWidth(), lblIMGConometro.getHeight(),
-				Image.SCALE_SMOOTH);
-		ImageIcon iconoRedimensionado = new ImageIcon(imagenRedimensionada);
-		lblIMGConometro.setIcon(iconoRedimensionado);
-		add(lblIMGConometro);
+        JLabel lblTiempoDelEjercicio = new JLabel("Tiempo Del Ejercicio:\r\n");
+        lblTiempoDelEjercicio.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblTiempoDelEjercicio.setBounds(10, 277, 197, 44);
+        panel_1.add(lblTiempoDelEjercicio);
 
-		JLabel lblSegundos = new JLabel("12");
-		lblSegundos.setForeground(Color.WHITE);
-		lblSegundos.setFont(new Font("Tahoma", Font.BOLD, 15));
-		lblSegundos.setBounds(51, 83, 75, 33);
-		add(lblSegundos);
+        lblTiempoCronometro_1 = new JLabel("00:00");
+        lblTiempoCronometro_1.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblTiempoCronometro_1.setBounds(20, 321, 112, 44);
+        panel_1.add(lblTiempoCronometro_1);
 
-		JButton btnIniciar = new JButton("Iniciar");
-		btnIniciar.setForeground(new Color(0, 128, 0));
-		btnIniciar.setFont(new Font("Tahoma", Font.BOLD, 20));
-		btnIniciar.setBackground(new Color(0, 255, 0));
-		btnIniciar.setBounds(359, 476, 131, 41);
-		add(btnIniciar);
+        JLabel lblDescanso = new JLabel("Descanso de un minuto:");
+        lblDescanso.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblDescanso.setBounds(10, 376, 224, 44);
+        panel_1.add(lblDescanso);
 
-		JLabel lblTiempoEjercicio = new JLabel("Tiempo Ejericio:");
-		lblTiempoEjercicio.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTiempoEjercicio.setBounds(38, 127, 187, 33);
-		add(lblTiempoEjercicio);
+        lblTiempoCronometro_2 = new JLabel("01:00");
+        lblTiempoCronometro_2.setFont(new Font("Tahoma", Font.PLAIN, 17));
+        lblTiempoCronometro_2.setBounds(20, 417, 112, 44);
+        panel_1.add(lblTiempoCronometro_2);
 
-		JLabel lblTiempoDescanso = new JLabel("Tiempo descanso:");
-		lblTiempoDescanso.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTiempoDescanso.setBounds(38, 183, 187, 33);
-		add(lblTiempoDescanso);
+        Panel panel_2 = new Panel();
+        panel_2.setBackground(SystemColor.menu);
+        panel_2.setBounds(242, 23, 656, 129);
+        add(panel_2);
+        panel_2.setLayout(null);
 
+        lblNombreEjer = new JLabel("Nombre Ejercicio\r\n");
+        lblNombreEjer.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        lblNombreEjer.setBounds(369, 16, 224, 44);
+        panel_2.add(lblNombreEjer);
+
+        lblDescripcionEjercicioWorkouts = new JLabel("Descripción Ejercicio \r\nWorkouts");
+        lblDescripcionEjercicioWorkouts.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        lblDescripcionEjercicioWorkouts.setBounds(96, 71, 523, 44);
+        panel_2.add(lblDescripcionEjercicioWorkouts);
+
+        lblNombreWorkout = new JLabel("Nombre WorkOut\r\n");
+        lblNombreWorkout.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        lblNombreWorkout.setBounds(96, 16, 235, 44);
+        panel_2.add(lblNombreWorkout);
+
+        // Crear la instancia de Cronometro y asignar los JLabel
+        cronometro = new Cronometro(lblTiempoCronometro, lblTiempoCronometro_1, lblTiempoCronometro_2);
+        
+        lblImagen = new JLabel(new ImageIcon("img/crono.png"));
+        lblImagen.setBounds(22, 11, 156, 147);
+        panel_1.add(lblImagen);
+
+        
+        JButton btnPausar = new JButton("Pausar");
+        btnPausar.setForeground(new Color(0, 128, 0));
+        btnPausar.setFont(new Font("Tahoma", Font.BOLD, 20));
+        btnPausar.setBackground(Color.GREEN);
+        btnPausar.setVisible(false);
+        add(btnPausar);
+
+        // Acción del botón Iniciar para iniciar el cronómetro
+        btnIniciar.addActionListener(e -> {
+            
+        	cronometro.iniciar();
+           
+        	contBoton++;
+            if(contBoton==1) {
+        	   
+        	    btnIniciar.setVisible(false);
+        	    btnPausar.setVisible(true);
+        	    btnPausar.setBounds(297, 512, 143, 41);
+            }
+            
+        });
+
+        // Acción del botón Salir para detener el cronómetro
+        btnSalir.addActionListener(e -> {
+            cronometro.detener();
+        });
+        
+        btnPausar.addActionListener(e ->{
+        	
+        	if(btnPausar.getText().equals("Pausar")) {
+        		
+        		cronometro.detener();
+        		btnPausar.setText("Reanudar");
+        		
+        	} else {
+        		
+        		cronometro.reanudar();
+        		btnPausar.setText("Pausar");
+        	}
+        	
+        	
+        });
+    }
+
+    public JLabel getLblNombreEjer() {
+        return lblNombreEjer;
+    }
+
+    public void setLblNombreEjer(JLabel lblNombreEjer) {
+        this.lblNombreEjer = lblNombreEjer;
+    }
+
+    public JLabel getLblNombreWorkout() {
+        return lblNombreWorkout;
+    }
+
+    public void setLblNombreWorkout(JLabel lblNombreWorkout) {
+        this.lblNombreWorkout = lblNombreWorkout;
+    }
+
+    public JButton getBtnSalir() {
+        return btnSalir;
+    }
+
+    public void setBtnSalir(JButton btnSalir) {
+        this.btnSalir = btnSalir;
+    }
+
+    public JButton getBtnIniciar() {
+        return btnIniciar;
+    }
+
+    public void setBtnIniciar(JButton btnIniciar) {
+        this.btnIniciar = btnIniciar;
+    }
+
+    public JLabel getLblDescripcionEjercicioWorkouts() {
+        return lblDescripcionEjercicioWorkouts;
+    }
+
+    public void setLblDescripcionEjercicioWorkouts(JLabel lblDescripcionEjercicioWorkouts) {
+        this.lblDescripcionEjercicioWorkouts = lblDescripcionEjercicioWorkouts;
+    }
+
+	public Cronometro getCronometro() {
+		return cronometro;
 	}
+
+	public void setCronometro(Cronometro cronometro) {
+		this.cronometro = cronometro;
+	}
+
+	public JTextArea getTxtSeries() {
+		return txtSeries;
+	}
+
+	public void setTxtSeries(JTextArea txtSeries) {
+		this.txtSeries = txtSeries;
+	}
+	
 }

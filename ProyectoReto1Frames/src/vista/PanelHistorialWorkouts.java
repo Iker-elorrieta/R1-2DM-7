@@ -11,11 +11,12 @@ import javax.swing.border.MatteBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JButton;
 import java.awt.Font;
+import javax.swing.JLabel;
 
 public class PanelHistorialWorkouts extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-
+	private JButton btnAtras;
 	private JTable tablaContactos;
 	private DefaultTableModel defaultTableModel;
 	// El color hay que cambiarlo a la main
@@ -33,20 +34,20 @@ public class PanelHistorialWorkouts extends JPanel {
 		setBackground(tema2);
 		setLayout(null);
 
-		JButton btnAtras = new JButton("Atrás");
+		btnAtras = new JButton("ATRÁS");
 		btnAtras.setForeground(tema);
-		btnAtras.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		btnAtras.setBackground(SystemColor.textText);
-		btnAtras.setBounds(69, 55, 111, 42);
+		btnAtras.setFont(new Font("Tahoma", Font.BOLD, 20));
+		btnAtras.setBackground(SystemColor.controlHighlight);
+		btnAtras.setBounds(42, 11, 111, 42);
 		add(btnAtras);
 
 		JScrollPane jScrollPanel;
 		jScrollPanel = new JScrollPane();
-		jScrollPanel.setBounds(60, 121, 880, 457);
+		jScrollPanel.setBounds(76, 126, 851, 396);
 		add(jScrollPanel);
 
-		String columnas[] = { "Nombre Workout", "Nivel", "Tiempo Total", "Tiempo Previsto", "Fecha",
-				"% Ejercicios Compleados" };
+		String columnas[] = { "Nombre Workout", "Nivel", "Tiempo Previsto", "Tiempo Total", "Fecha",
+				"% Ejercicios Completados" };
 
 		defaultTableModel = new DefaultTableModel(columnas, 0);
 
@@ -56,10 +57,35 @@ public class PanelHistorialWorkouts extends JPanel {
 		tablaContactos.setRowSelectionAllowed(false);
 		tablaContactos.setCellSelectionEnabled(false);
 
-		tablaContactos.setDefaultEditor(Object.class, null); // Anulamos la edici�n en la propia celda
+		tablaContactos.setDefaultEditor(Object.class, null); // Anulamos la edicion en la propia celda
 
 		jScrollPanel.setViewportView(tablaContactos);
+		
+		JLabel lblGymApp = new JLabel("GymApp");
+		lblGymApp.setFont(new Font("Times New Roman", Font.BOLD, 40));
+		lblGymApp.setBounds(412, 11, 180, 57);
+		add(lblGymApp);
+		
+		JLabel lblHistoricoWorkouts = new JLabel("HISTORIAL DE WORKOUTS");
+		lblHistoricoWorkouts.setFont(new Font("Times New Roman", Font.BOLD, 20));
+		lblHistoricoWorkouts.setBounds(367, 64, 278, 42);
+		add(lblHistoricoWorkouts);
 
 	}
 
+	public JButton getBtnAtras() {
+		return btnAtras;
+	}
+
+	public void setBtnAtras(JButton btnAtras) {
+		this.btnAtras = btnAtras;
+	}
+
+	public JTable getTablaContactos() {
+		return tablaContactos;
+	}
+
+	public void setTablaContactos(JTable tablaContactos) {
+		this.tablaContactos = tablaContactos;
+	}
 }

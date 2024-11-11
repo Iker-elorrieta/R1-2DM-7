@@ -11,9 +11,9 @@ public class Principal extends JFrame {
 	public static enum enumAcciones {
 
 		CARGAR_PANEL_LOGIN, CARGAR_PANEL_REGISTRO, CARGAR_PANEL_WORKOUTS, CARGAR_PANEL_HISTORIAL_WORKOUTS,
-		CARGAR_PANEL_EJERCICIOS,
+		CARGAR_PANEL_EJERCICIOS,CARGAR_PANEL_USUARIO,
 
-		INICIAR_SESION, REGISTRAR_USUARIO,
+		INICIAR_SESION, REGISTRAR_USUARIO,MODIFICAR_USUARIO,
 	}
 
 	private JPanel panelContenedor;
@@ -23,6 +23,7 @@ public class Principal extends JFrame {
 	private PanelWorkouts panelWorkouts;
 	private PanelHistorialWorkouts panelHistorialWorkouts;
 	private PanelEjercicio panelEjercicio;
+	private PanelUsuario panelUsuario;
 
 	public Principal() {
 
@@ -43,8 +44,13 @@ public class Principal extends JFrame {
 
 		// Panel que contiene todo el contenido de los Ejercicios
 		mCrearPanelEjercicio();
+		
+		// Panel que sirve para modificar el perfil del Usuario
+		mCrearPanelUsuario();
 
 	}
+
+	
 
 	private void mCrearPanelContenedor() {
 
@@ -98,6 +104,15 @@ public class Principal extends JFrame {
 		panelEjercicio.setVisible(false);
 
 	}
+	
+	private void mCrearPanelUsuario() {
+		panelUsuario = new PanelUsuario();
+		panelUsuario.setBounds(0,0,1000,600);
+		panelContenedor.add(panelUsuario);
+		panelUsuario.setVisible(false);
+		
+		
+	}
 
 	// *** FIN creaci�n de paneles ***
 
@@ -109,6 +124,7 @@ public class Principal extends JFrame {
 		panelWorkouts.setVisible(false);
 		panelHistorialWorkouts.setVisible(false);
 		panelEjercicio.setVisible(false);
+		panelUsuario.setVisible(false);
 
 		// Generamos un switch para acceder a cada panel
 		switch (panel) {
@@ -136,6 +152,11 @@ public class Principal extends JFrame {
 		case CARGAR_PANEL_EJERCICIOS:
 			setSize(1000, 600);
 			panelEjercicio.setVisible(true);
+			break;
+			
+		case CARGAR_PANEL_USUARIO:
+			setSize(1000,600);
+			panelUsuario.setVisible(true);
 			break;
 
 		default:
@@ -190,5 +211,17 @@ public class Principal extends JFrame {
 	public void setPanelEjercicio(PanelEjercicio panelEjercicio) {
 		this.panelEjercicio = panelEjercicio;
 	}
+
+	public PanelUsuario getPanelUsuario() {
+		return panelUsuario;
+	}
+
+
+
+	public void setPanelUsuario(PanelUsuario panelUsuario) {
+		this.panelUsuario = panelUsuario;
+	}
+	
+	
 
 }

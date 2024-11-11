@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
@@ -19,6 +20,10 @@ import conexion.ConexionDB;
 
 public class Ejercicio implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String nombre;
 	private String descripcion;
 	private ArrayList<Serie> series;
@@ -27,7 +32,8 @@ public class Ejercicio implements Serializable {
 
 	private static final String collectionName = "ejercicios";
 	private static final String fieldDescripcion = "descripcion";
-	private static final String fieldSeries = "series";
+	//LO HE QUITADO PARA QUE NO DE WARNINGS
+	//private static final String fieldSeries = "series";
 	private static final String fieldImagen = "imagenUrl";
 	private static final String fieldTiempo = "tiempoDescanso";
 
@@ -121,7 +127,81 @@ public class Ejercicio implements Serializable {
 			e.printStackTrace();
 		}
 	}
+	
+	public int obtenerTiempoSerie(String nombreWorkout, String nombreEjercicio) {
+	    int tiemposSerie = 0;
+	    Firestore db = null;
 
+	    try {
+	        // Conexión a Firestore
+	        db = ConexionDB.conectar();
+
+	        // Referencia al documento de "workout"
+	        DocumentReference referenciaWorkout = db.collection("workouts").document(nombreWorkout);
+	        DocumentReference ejercicioRef = referenciaWorkout.collection("ejercicios").document(nombreEjercicio);
+
+	       
+	        CollectionReference seriesRef = ejercicioRef.collection("series");
+
+	        
+	        ApiFuture<QuerySnapshot> future = seriesRef.get();
+	        QuerySnapshot querySnapshot = future.get();
+
+	        
+	        if (!querySnapshot.isEmpty()) {
+	            
+	            DocumentSnapshot serie = querySnapshot.getDocuments().get(0);
+
+	           
+	            if (serie.exists() && serie.contains("tiempoSerie")) {
+	                tiemposSerie = serie.getLong("tiempoSerie").intValue();
+	            } else {
+	                System.out.println("No se encontró el campo 'tiempoSerie' en la serie.");
+	            }
+	        } else {
+	            System.out.println("No hay series en el ejercicio.");
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return tiemposSerie;
+	}
+
+
+	
+	 public String mObtenerDescripcion( String nombreWorkout, String nombreEjercicio) {
+	        String descripcion = null;
+	        Firestore co = null;
+	        
+	        try {
+	            // Conexión a Firestore
+	        	co = ConexionDB.conectar();
+	            
+	            // Referencia al documento de "workout"
+	            DocumentReference referenciaWorkout = co.collection("workouts").document(nombreWorkout);
+	            
+	            // Referencia a la subcolección "ejercicios" y al documento del ejercicio específico
+	            DocumentReference ejercicioRef = referenciaWorkout.collection(collectionName).document(nombreEjercicio);
+	            
+	            // Obtener el documento del ejercicio
+	            ApiFuture<DocumentSnapshot> future = ejercicioRef.get();
+	            DocumentSnapshot documentoEjercicio = future.get();
+	            
+	            // Comprobar si el documento existe y obtener la descripción
+	            if (documentoEjercicio.exists()) {
+	                descripcion = documentoEjercicio.getString("descripcion");
+	            } else {
+	                System.out.println("El ejercicio no existe.");
+	            }
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	        
+	        return descripcion;
+	    }
 	// Método para obtener todos los ejercicios
 
 	public ArrayList<Ejercicio> mObtenerEjercicios(String coleccion, String nombreWorkout) {

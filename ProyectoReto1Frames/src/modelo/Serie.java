@@ -18,6 +18,10 @@ import conexion.ConexionDB;
 
 public class Serie implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String nombre;
 	private String imagenUrl;
 	private double repeticiones;
@@ -80,11 +84,15 @@ public class Serie implements Serializable {
 
 	public void mIngresarSerie(String nombreColeccion, String nombreColeccionEjercicio, String nombreEjercicio,
 			String nombreWorkout) {
+		
 		Firestore firestoreConnection = null;
+		
 		try {
+			
 			firestoreConnection = ConexionDB.conectar();
 
 			// Obtener referencia de documento de workout
+			
 			DocumentReference documentoWorkout = firestoreConnection.collection(nombreColeccion)
 					.document(nombreWorkout);
 			DocumentReference documentoEjercicio = documentoWorkout.collection(nombreColeccionEjercicio)
@@ -96,11 +104,15 @@ public class Serie implements Serializable {
 				Map<String, Object> nuevaSerie = new HashMap<>();
 				nuevaSerie.put(fieldImagen, this.imagenUrl);
 				nuevaSerie.put(fieldRepeticion, this.repeticiones);
+				nuevaSerie.put(fieldTiempo, this.tiempoSerie);
 
+				
 				coleccionSeries.document(this.nombre).set(nuevaSerie);
 
 				System.out.println("La serie ha sido insertada con éxito");
+				
 			} else {
+				
 				System.out.println("La serie ya fue previamente introducida");
 			}
 
@@ -136,6 +148,7 @@ public class Serie implements Serializable {
 				serie.setNombre(documentoSerie.getId());
 				serie.setRepeticiones(documentoSerie.getDouble(fieldRepeticion));
 				serie.setImagenUrl(documentoSerie.getString(fieldImagen));
+				serie.setTiempoSerie(documentoSerie.getDouble(fieldTiempo));
 				listaDeSeries.add(serie);
 			}
 			firestoreConnection.close();
@@ -162,7 +175,7 @@ public class Serie implements Serializable {
 			Map<String, Object> serieActualizada = new HashMap<>();
 			serieActualizada.put(fieldImagen, this.imagenUrl);
 			serieActualizada.put(fieldRepeticion, this.repeticiones);
-
+			serieActualizada.put(fieldTiempo, this.tiempoSerie);
 			serieDoc.update(serieActualizada);
 
 			System.out.println("Serie actualizada con éxito");

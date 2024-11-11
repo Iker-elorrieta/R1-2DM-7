@@ -19,22 +19,28 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
+
 import conexion.ConexionDB;
 
 public class Usuario implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String nombre;
 	private String apellidos;
 	private String email; // Usaremos el email del usuario como id
-	private Date fechaNac;
+	private Date fechaNacimiento;
 	private String contrasena;
 	private double nivelUsuario;
+	private ArrayList<Historicos> historicoUsuario;
 
 	private static final String collectionName = "Usuarios";
 
 	private static final String fieldNombre = "nombre";
 	private static final String fieldApellidos = "apellido";
-	private static final String fieldContrasena = "contraseña";
+	private static final String fieldContrasena = "contrasena";
 	private static final String fieldFecha = "fechaNacimiento";
 	private static final String fieldNivel = "nivel";
 
@@ -48,24 +54,24 @@ public class Usuario implements Serializable {
 		this.contrasena = contrasena;
 	}
 
-	public Usuario(String nombre, String apellidos, String email, String contrasena, Date fechaNac) {
+	public Usuario(String nombre, String apellidos, String email, String contrasena, Date fechaNacimiento) {
 
 		this.nombre = nombre;
 		this.apellidos = apellidos;
 		this.email = email;
 		this.contrasena = contrasena;
-		this.fechaNac = fechaNac;
+		this.fechaNacimiento = fechaNacimiento;
 		this.nivelUsuario = 0; // Lo inicializamos a 0
 	}
 
-	public Usuario(String nombre, String apellidos, String email, String contrasena, Date fechaNac,
+	public Usuario(String nombre, String apellidos, String email, String contrasena, Date fechaNacimiento,
 			double nivelUsuario) {
 
 		this.nombre = nombre;
 		this.apellidos = apellidos;
 		this.email = email;
 		this.contrasena = contrasena;
-		this.fechaNac = fechaNac;
+		this.fechaNacimiento = fechaNacimiento;
 		this.nivelUsuario = nivelUsuario;
 	}
 
@@ -93,12 +99,12 @@ public class Usuario implements Serializable {
 		this.email = email;
 	}
 
-	public Date getFechaNac() {
-		return fechaNac;
+	public Date getFechaNacimiento() {
+		return fechaNacimiento;
 	}
 
-	public void setFechaNac(Date fechaNac) {
-		this.fechaNac = fechaNac;
+	public void setFechaNacimiento(Date fechaNacimiento) {
+		this.fechaNacimiento = fechaNacimiento;
 	}
 
 	public String getContrasena() {
@@ -117,6 +123,16 @@ public class Usuario implements Serializable {
 		this.nivelUsuario = nivelUsuario;
 	}
 
+	public ArrayList<Historicos> getHistoricoUsuario() {
+		return historicoUsuario;
+	}
+
+	public void setHistoricoUsuario(ArrayList<Historicos> historicoUsuario) {
+		this.historicoUsuario = historicoUsuario;
+	}
+	
+	
+	
 	// Metodo de Registrar usuario en el Firebase
 
 	public void mRegistrarUsuario() {
@@ -132,7 +148,7 @@ public class Usuario implements Serializable {
 				nuevoUsuario.put(fieldNombre, this.nombre);
 				nuevoUsuario.put(fieldApellidos, this.apellidos);
 				nuevoUsuario.put(fieldContrasena, this.contrasena);
-				nuevoUsuario.put(fieldFecha, this.fechaNac);
+				nuevoUsuario.put(fieldFecha, this.fechaNacimiento);
 				nuevoUsuario.put(fieldNivel, (Double) this.nivelUsuario);
 				DocumentReference newCont = root.document(this.email);
 				newCont.set(nuevoUsuario);
@@ -145,12 +161,46 @@ public class Usuario implements Serializable {
 			co.close();
 
 		} catch (IOException | InterruptedException | ExecutionException e) {
+
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 
+	}
+
+	public void mModificarUsuario(Usuario usuarioLogeado) {
+
+		Firestore co = null;
+
+		try {
+
+			co = ConexionDB.conectar();
+
+			DocumentReference dsUsuario = co.collection(collectionName).document(usuarioLogeado.getEmail());
+
+			ApiFuture<DocumentSnapshot> future = dsUsuario.get();
+			DocumentSnapshot document = future.get();
+
+			if (document.exists()) {
+				Map<String, Object> datos = new HashMap<>();
+
+				datos.put(fieldNombre, usuarioLogeado.nombre);
+				datos.put(fieldApellidos, usuarioLogeado.apellidos);
+				datos.put(fieldContrasena, usuarioLogeado.contrasena);
+				datos.put(fieldFecha, usuarioLogeado.fechaNacimiento);
+
+				dsUsuario.update(datos);
+			} else {
+
+				JOptionPane.showMessageDialog(null, "Error al modificar los datos");
+			}
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
 	}
 
 	// Metodo para Obtener un usuario para poder Iniciar Sesion
@@ -172,7 +222,7 @@ public class Usuario implements Serializable {
 					setNombre(dsUsuario.getString(fieldNombre));
 					setApellidos(dsUsuario.getString(fieldApellidos));
 					setContrasena(dsUsuario.getString(fieldContrasena));
-					setFechaNac(obtenerFechaDate(dsUsuario, fieldFecha));
+					setFechaNacimiento(obtenerFechaDate(dsUsuario, fieldFecha));
 					// setNivelUsuario(dsUsuario.getDouble(fieldNivel));
 					setNivelUsuario(dsUsuario.getDouble(fieldNivel) != null ? dsUsuario.getDouble(fieldNivel) : 0.0); // Manejar
 																														// null
@@ -181,7 +231,7 @@ public class Usuario implements Serializable {
 					return this;
 
 				} else {
-					JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrectos", "ERROR",
+					JOptionPane.showMessageDialog(null, "Usuario o contrasena incorrectos", "ERROR",
 							JOptionPane.ERROR_MESSAGE);
 				}
 			} else {
