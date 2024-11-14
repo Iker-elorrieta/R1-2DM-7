@@ -1,6 +1,8 @@
 package modelo;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,6 +23,7 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 
 import conexion.ConexionDB;
+import principal.Principal;
 
 public class Usuario implements Serializable {
 
@@ -35,6 +38,9 @@ public class Usuario implements Serializable {
 	private String contrasena;
 	private double nivelUsuario;
 	private ArrayList<Historicos> historicoUsuario;
+	
+	
+	private static final String USUARIOSFILEROUTE = "backup/usuarios.dat";
 
 	private static final String collectionName = "Usuarios";
 
@@ -131,9 +137,14 @@ public class Usuario implements Serializable {
 		this.historicoUsuario = historicoUsuario;
 	}
 	
+	public static String getCollectionname() {
+		return collectionName;
+	}
 	
 	
 	// Metodo de Registrar usuario en el Firebase
+
+	
 
 	public void mRegistrarUsuario() {
 		Firestore co = null;
@@ -207,41 +218,65 @@ public class Usuario implements Serializable {
 
 	public Usuario mObtenerUsuario(String usuarioIntroducido, String passIntroducida) {
 
-		Firestore co = null;
+		Principal principal = new Principal();
+		
+		if (principal.getInternet()) {
+			
+			Firestore co = null;
 
-		try {
-			co = ConexionDB.conectar();
-
-			if (co.collection(collectionName).document(usuarioIntroducido).get().get().exists()) {
-
-				DocumentSnapshot dsUsuario = co.collection(collectionName).document(usuarioIntroducido).get().get();
-
-				if (dsUsuario.getString(fieldContrasena).equals(passIntroducida)) {
-
-					setEmail(dsUsuario.getId());
-					setNombre(dsUsuario.getString(fieldNombre));
-					setApellidos(dsUsuario.getString(fieldApellidos));
-					setContrasena(dsUsuario.getString(fieldContrasena));
-					setFechaNacimiento(obtenerFechaDate(dsUsuario, fieldFecha));
-					// setNivelUsuario(dsUsuario.getDouble(fieldNivel));
-					setNivelUsuario(dsUsuario.getDouble(fieldNivel) != null ? dsUsuario.getDouble(fieldNivel) : 0.0); // Manejar
-																														// null
-
-					JOptionPane.showMessageDialog(null, "Inicio de sesión exitoso");
-					return this;
-
+			try {
+				co = ConexionDB.conectar();
+	
+				if (co.collection(collectionName).document(usuarioIntroducido).get().get().exists()) {
+	
+					DocumentSnapshot dsUsuario = co.collection(collectionName).document(usuarioIntroducido).get().get();
+	
+					if (dsUsuario.getString(fieldContrasena).equals(passIntroducida)) {
+	
+						setEmail(dsUsuario.getId());
+						setNombre(dsUsuario.getString(fieldNombre));
+						setApellidos(dsUsuario.getString(fieldApellidos));
+						setContrasena(dsUsuario.getString(fieldContrasena));
+						setFechaNacimiento(obtenerFechaDate(dsUsuario, fieldFecha));
+						setNivelUsuario(dsUsuario.getDouble(fieldNivel));
+						//setNivelUsuario(dsUsuario.getDouble(fieldNivel) != null ? dsUsuario.getDouble(fieldNivel) : 0.0); // Manejar
+																															// null
+	
+						JOptionPane.showMessageDialog(null, "Inicio de sesión exitoso");
+						return this;
+	
+					} else {
+						JOptionPane.showMessageDialog(null, "Usuario o contrasena incorrectos", "ERROR",
+								JOptionPane.ERROR_MESSAGE);
+					}
 				} else {
-					JOptionPane.showMessageDialog(null, "Usuario o contrasena incorrectos", "ERROR",
-							JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Error de Inicio de Sesión", "ERROR", JOptionPane.ERROR_MESSAGE);
+	
 				}
-			} else {
-				JOptionPane.showMessageDialog(null, "Error de Inicio de Sesión", "ERROR", JOptionPane.ERROR_MESSAGE);
-
+	
+				co.close();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-
-			co.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+		}else {
+			try {
+			    FileInputStream fic = new FileInputStream(USUARIOSFILEROUTE);
+			    ObjectInputStream ois = new ObjectInputStream(fic);
+			    
+			    // Leer el ArrayList completo en lugar de un único Usuario
+			    @SuppressWarnings("unchecked")
+			    ArrayList<Usuario> usuarios = (ArrayList<Usuario>) ois.readObject();
+			    ois.close();
+			    
+			    for (Usuario usuario : usuarios) {
+			        if (usuario.getEmail().equals(usuarioIntroducido) && usuario.getContrasena().equals(passIntroducida)) {
+			            return usuario;
+			        }
+			    }
+			} catch (IOException | ClassNotFoundException e) {
+			    JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrectos", "ERROR", JOptionPane.ERROR_MESSAGE);
+			}
+			
 		}
 		return null;
 	}

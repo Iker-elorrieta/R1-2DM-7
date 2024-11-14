@@ -2,12 +2,13 @@ package controlador;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
-
 import modelo.Ejercicio;
 import modelo.Usuario;
 import modelo.WorkOuts;
@@ -174,8 +175,6 @@ public class Controlador implements ActionListener {
 
 	// Metodo para que el usuario inicie sesion y lo valide
 
-	
-
 	private void mIniciarSesion() {
 		
 		PanelLogin panelLogin = this.vistaPrincipal.getPanelLogin();
@@ -183,36 +182,24 @@ public class Controlador implements ActionListener {
 		String usuarioIntroducido = panelLogin.getTextUsuarioL().getText().trim();
 		String contrasenaIntroducida = new String(panelLogin.getTextContrasenaL().getPassword()).trim();
 
-		if (usuarioIntroducido.isEmpty() || contrasenaIntroducida.isEmpty()) {
-
-			JOptionPane.showMessageDialog(null, "Por favor, completa todos los campos.", "Error",
-					JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
-		Usuario usuario = new Usuario();
-
-		usuarioLogeado = usuario.mObtenerUsuario(usuarioIntroducido, contrasenaIntroducida);
-
-		if (usuarioLogeado != null) {
-			//Generamos un BackUp
-			try {
-                ProcessBuilder builder = new ProcessBuilder("java", "-jar", "backUp.jar");
-                builder.start();
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-			//Cargamos el panel de WorkOuts
-			mCargarWorkOuts(Principal.enumAcciones.CARGAR_PANEL_WORKOUTS);
-			panelLogin.getTextUsuarioL().setText("");
-			panelLogin.getTextContrasenaL().setText("");
-			
+		if (!usuarioIntroducido.isEmpty() && !contrasenaIntroducida.isEmpty()) {
+			Usuario usuario = new Usuario();
+			usuarioLogeado = usuario.mObtenerUsuario(usuarioIntroducido, contrasenaIntroducida);
+			if (usuarioLogeado != null) {
+				if (hayInternet()) {
+					try {
+						ProcessBuilder builder = new ProcessBuilder("java", "-jar", "backUp.jar");
+						builder.start();
+						System.out.println("BACKUP GENERADO CON EXITO");
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						System.out.println("ERROR");
+					}
+				}
+				mCargarWorkOuts(Principal.enumAcciones.CARGAR_PANEL_WORKOUTS);
+			}
 		} else {
-			
-			JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrectos.", "Error",
-					JOptionPane.ERROR_MESSAGE);
-			panelLogin.getTextUsuarioL().setText("");
-			panelLogin.getTextContrasenaL().setText("");
+			JOptionPane.showMessageDialog(null, "Algún campo está vacío", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -243,62 +230,42 @@ public class Controlador implements ActionListener {
 	// Metodo para registrar el usuario
 	
 	public void mRegistrarUsuario() {
-
-		PanelRegistro panelRegistro = this.vistaPrincipal.getPanelRegistro();
-
-		String nombre = panelRegistro.getTextNombreR().getText();
-		String apellidos = panelRegistro.getTextApellidosR().getText();
-		String email = panelRegistro.getTextEmailR().getText();
-		String contrasena = new String(panelRegistro.getTextContrasenaR().getPassword()).trim();
-		Date fechaNacimiento = panelRegistro.getFecCalendar().getDate();
-
-		if (!nombre.isEmpty() && !apellidos.isEmpty() && !email.isEmpty() && !contrasena.isEmpty()
-				&& emailRegistro(email)) {
-
-			Usuario usuario = new Usuario(nombre, apellidos, email, contrasena, fechaNacimiento);
-			usuario.mRegistrarUsuario();
-
-			panelRegistro.getTextNombreR().setText("");
-			panelRegistro.getTextApellidosR().setText("");
-			panelRegistro.getTextEmailR().setText("");
-			panelRegistro.getTextContrasenaR().setText("");
-			panelRegistro.getFecCalendar().setDate(new Date());
-
-		} else if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty() || contrasena.isEmpty()) {
-
-			JOptionPane.showMessageDialog(null, "Algún campo está vacío", "Error", JOptionPane.ERROR_MESSAGE);
-		}
-
-		if (!emailRegistro(email)) {
-
-			JOptionPane.showMessageDialog(null, "El email no es válido.", "Error", JOptionPane.ERROR_MESSAGE);
-
-		}
-	}
+		if (hayInternet()) {
+			PanelRegistro panelRegistro = this.vistaPrincipal.getPanelRegistro();
 	
-	public void mObtenerWorkout() {
-	    PanelWorkouts panelWorkouts = this.vistaPrincipal.getPanelWorkouts();
-	    PanelEjercicio panelEjercicio = this.vistaPrincipal.getPanelEjercicio();
-
-	    Ejercicio ejercicio = new Ejercicio();
-	    String nombreEjercicio = panelWorkouts.getListaEjercicios().getModel().getElementAt(0).toString();
-	    String nombreWorkout = panelWorkouts.getListaWorkOuts().getSelectedValue().toString();
-
-	    // Obtener descripción del ejercicio
-	    String descripcionEjercicio = ejercicio.mObtenerDescripcion(nombreWorkout, nombreEjercicio);
-
-	    // Obtener tiempos de las series
-	    int tiemposSeries = ejercicio.obtenerTiempoSerie(nombreWorkout, nombreEjercicio);
-
-	    // Asignar descripción y nombres a los labels
-	    panelEjercicio.getLblNombreEjer().setText(nombreEjercicio);
-	    panelEjercicio.getLblNombreWorkout().setText(nombreWorkout);
-	    panelEjercicio.getLblDescripcionEjercicioWorkouts().setText(descripcionEjercicio);
-
-	    // Pasar los tiempos al cronómetro
-	    panelEjercicio.getCronometro().setTiempoSerie(tiemposSeries);
+			String nombre = panelRegistro.getTextNombreR().getText();
+			String apellidos = panelRegistro.getTextApellidosR().getText();
+			String email = panelRegistro.getTextEmailR().getText();
+			String contrasena = new String(panelRegistro.getTextContrasenaR().getPassword()).trim();
+			Date fechaNacimiento = panelRegistro.getFecCalendar().getDate();
+	
+			if (!nombre.isEmpty() && !apellidos.isEmpty() && !email.isEmpty() && !contrasena.isEmpty()
+					&& emailRegistro(email)) {
+	
+				Usuario usuario = new Usuario(nombre, apellidos, email, contrasena, fechaNacimiento);
+				usuario.mRegistrarUsuario();
+	
+				panelRegistro.getTextNombreR().setText("");
+				panelRegistro.getTextApellidosR().setText("");
+				panelRegistro.getTextEmailR().setText("");
+				panelRegistro.getTextContrasenaR().setText("");
+				panelRegistro.getFecCalendar().setDate(new Date());
+	
+			} else if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty() || contrasena.isEmpty()) {
+	
+				JOptionPane.showMessageDialog(null, "Algún campo está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+	
+			if (!emailRegistro(email)) {
+	
+				JOptionPane.showMessageDialog(null, "El email no es válido.", "Error", JOptionPane.ERROR_MESSAGE);
+	
+			}
+		}else {
+			JOptionPane.showMessageDialog(null, "Registro no disponible sin conexión a internet", "Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
 	}
-
 
 
 	// Validamos el mail del usuario con una expresión regular
@@ -319,60 +286,42 @@ public class Controlador implements ActionListener {
 	
 	public void mActualizarPanelEjercicio() {
 		
-	    PanelWorkouts panelWorkouts = this.vistaPrincipal.getPanelWorkouts();
-	    PanelEjercicio panelEjercicio = this.vistaPrincipal.getPanelEjercicio();
-
-	    Ejercicio ejercicio = new Ejercicio();
-	    String nombreEjercicio = panelWorkouts.getListaEjercicios().getModel().getElementAt(0).toString();
-	    String nombreWorkout = panelWorkouts.getListaWorkOuts().getSelectedValue().toString();
-
-	    // Obtener descripción del ejercicio
-	    String descripcionEjercicio = ejercicio.mObtenerDescripcion(nombreWorkout, nombreEjercicio);
-
-	    // Obtener tiempos de las series
-	    int tiemposSeries = ejercicio.obtenerTiempoSerie(nombreWorkout, nombreEjercicio);
-
-	    // Asignar descripción y nombres a los labels
-	    panelEjercicio.getLblNombreEjer().setText(nombreEjercicio);
-	    panelEjercicio.getLblNombreWorkout().setText(nombreWorkout);
-	    panelEjercicio.getLblDescripcionEjercicioWorkouts().setText(descripcionEjercicio);
-
-	    // Pasar los tiempos al cronómetro
-	    panelEjercicio.getCronometro().setTiempoSerie(tiemposSeries);
+		 
+			PanelWorkouts panelWorkouts = this.vistaPrincipal.getPanelWorkouts();
+		    PanelEjercicio panelEjercicio = this.vistaPrincipal.getPanelEjercicio();
+	
+		    // Verificar si se ha seleccionado un workout en la lista
+		    if (panelWorkouts.getListaWorkOuts().getSelectedValue() == null) {
+		        JOptionPane.showMessageDialog(null, "Por favor, selecciona un workout.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+		        return; // Salir del método si no hay selección
+		    }
+	
+		    String nombreWorkout = panelWorkouts.getListaWorkOuts().getSelectedValue().toString();
+	
+		    // Verificar si la lista de ejercicios tiene al menos un ejercicio
+		    if (panelWorkouts.getListaEjercicios().getModel().getSize() == 0) {
+		        JOptionPane.showMessageDialog(null, "No hay ejercicios disponibles para este workout.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+		        return; // Salir del método si no hay ejercicios
+		    }
+	
+		    // Obtener el primer ejercicio de la lista
+		    String nombreEjercicio = panelWorkouts.getListaEjercicios().getModel().getElementAt(0).toString();
+	
+		    // Crear el objeto Ejercicio y obtener la descripción y el tiempo
+		    Ejercicio ejercicio = new Ejercicio();
+		    String descripcionEjercicio = ejercicio.mObtenerDescripcion(nombreWorkout, nombreEjercicio);
+		    int tiemposSeries = ejercicio.obtenerTiempoSerie(nombreWorkout, nombreEjercicio);
+	
+		    // Asignar la información a los labels y al cronómetro
+		    panelEjercicio.getLblNombreEjer().setText(nombreEjercicio);
+		    panelEjercicio.getLblNombreWorkout().setText(nombreWorkout);
+		    panelEjercicio.getLblDescripcionEjercicioWorkouts().setText(descripcionEjercicio);
+		    panelEjercicio.getCronometro().setTiempoSerie(tiemposSeries);
+	
 	}
 	
-	// Método para mostrar las series del ejercicio seleccionado
 	
-	/*public void mostrarSeries(String nombreWorkout, String nombreEjercicio) {
-		
-		 
-	    ArrayList<Ejercicio> ejercicios = new Ejercicio().mObtenerEjercicios("coleccion", nombreWorkout);
-	    PanelEjercicio panelEjercicio = this.vistaPrincipal.getPanelEjercicio();
-	    // Buscar el ejercicio específico en la lista
-	    
-	    for (Ejercicio ejercicio : ejercicios) {
-	    	
-	        if (ejercicio.getNombre().equals(nombreEjercicio)) {
-	           
-	        	// Obtener las series de ese ejercicio	        	
-	            ArrayList<Serie> series = ejercicio.getSeries();
-
-	            // Crear un StringBuilder para almacenar los nombres de las series	            
-	            StringBuilder sb = new StringBuilder();
-	            
-	            for (Serie serie : series) {	  	
-	                sb.append(serie.getNombre()).append("\n");
-	            }
-
-	            // Establecer el texto en el JTextArea con los nombres de las series
-	            panelEjercicio.getTxtSeries().setText(sb.toString());
-	            break; // Salir del ciclo una vez que se encuentra el ejercicio
-	        }
-	    }
-		
-		
-	    
-	}*/
+	// Método para mostrar las series del ejercicio seleccionado
 
 	private void mostrarSeries() {
 		
@@ -407,6 +356,16 @@ public class Controlador implements ActionListener {
 	private void mInsertarInfoEnHistorico() {
 		
 		
+	}
+
+		
+	public boolean hayInternet() {
+		try {
+			InetAddress address = InetAddress.getByName("8.8.8.8");
+			return address.isReachable(3000);
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 

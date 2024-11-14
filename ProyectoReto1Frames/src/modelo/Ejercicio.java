@@ -1,6 +1,8 @@
 package modelo;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 
 import conexion.ConexionDB;
+import principal.Principal;
 
 public class Ejercicio implements Serializable {
 
@@ -29,7 +32,7 @@ public class Ejercicio implements Serializable {
 	private ArrayList<Serie> series;
 	private String imagenURL;
 	private double tiempoDescanso;
-
+	private static final String WORKOUTSFILEROUTE = "backup/workouts.dat";
 	private static final String collectionName = "ejercicios";
 	private static final String fieldDescripcion = "descripcion";
 	//LO HE QUITADO PARA QUE NO DE WARNINGS
@@ -130,40 +133,64 @@ public class Ejercicio implements Serializable {
 	
 	public int obtenerTiempoSerie(String nombreWorkout, String nombreEjercicio) {
 	    int tiemposSerie = 0;
-	    Firestore db = null;
 
-	    try {
-	        // Conexión a Firestore
-	        db = ConexionDB.conectar();
+	    // Verificar si hay conexión a Internet
+	    if (new Principal().getInternet()) {
+	        Firestore db = null;
 
-	        // Referencia al documento de "workout"
-	        DocumentReference referenciaWorkout = db.collection("workouts").document(nombreWorkout);
-	        DocumentReference ejercicioRef = referenciaWorkout.collection("ejercicios").document(nombreEjercicio);
+	        try {
+	            // Conexión a Firestore
+	            db = ConexionDB.conectar();
 
-	       
-	        CollectionReference seriesRef = ejercicioRef.collection("series");
+	            // Referencia al documento de "workout"
+	            DocumentReference referenciaWorkout = db.collection("workouts").document(nombreWorkout);
+	            DocumentReference ejercicioRef = referenciaWorkout.collection("ejercicios").document(nombreEjercicio);
 
-	        
-	        ApiFuture<QuerySnapshot> future = seriesRef.get();
-	        QuerySnapshot querySnapshot = future.get();
+	            CollectionReference seriesRef = ejercicioRef.collection("series");
 
-	        
-	        if (!querySnapshot.isEmpty()) {
-	            
-	            DocumentSnapshot serie = querySnapshot.getDocuments().get(0);
+	            ApiFuture<QuerySnapshot> future = seriesRef.get();
+	            QuerySnapshot querySnapshot = future.get();
 
-	           
-	            if (serie.exists() && serie.contains("tiempoSerie")) {
-	                tiemposSerie = serie.getLong("tiempoSerie").intValue();
+	            if (!querySnapshot.isEmpty()) {
+	                DocumentSnapshot serie = querySnapshot.getDocuments().get(0);
+	                if (serie.exists() && serie.contains("tiempoSerie")) {
+	                    tiemposSerie = serie.getLong("tiempoSerie").intValue();
+	                } else {
+	                    System.out.println("No se encontró el campo 'tiempoSerie' en la serie.");
+	                }
 	            } else {
-	                System.out.println("No se encontró el campo 'tiempoSerie' en la serie.");
+	                System.out.println("No hay series en el ejercicio.");
 	            }
-	        } else {
-	            System.out.println("No hay series en el ejercicio.");
-	        }
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	    } else {
+	        // Si no hay conexión, leer del backup local
+	        try {
+	            FileInputStream fic = new FileInputStream(WORKOUTSFILEROUTE);
+	            ObjectInputStream ois = new ObjectInputStream(fic);
+
+	            // Leer los workouts desde el backup
+	            @SuppressWarnings("unchecked")
+	            ArrayList<WorkOuts> listaWorkouts = (ArrayList<WorkOuts>) ois.readObject();
+	            ois.close();
+
+	            // Buscar el workout y ejercicio correspondiente
+	            for (WorkOuts workout : listaWorkouts) {
+	                if (workout.getNombre().equals(nombreWorkout)) {
+	                    for (Ejercicio ejercicio : workout.getEjercicios()) {
+	                        if (ejercicio.getNombre().equals(nombreEjercicio)) {
+	                            tiemposSerie = ejercicio.obtenerTiempoSerie(nombreEjercicio, nombreEjercicio); // Suponiendo que cada ejercicio tiene su tiempo
+	                            return tiemposSerie;
+	                        }
+	                    }
+	                }
+	            }
+
+	        } catch (IOException | ClassNotFoundException e) {
+	            e.printStackTrace();
+	        }
 	    }
 
 	    return tiemposSerie;
@@ -171,37 +198,69 @@ public class Ejercicio implements Serializable {
 
 
 	
-	 public String mObtenerDescripcion( String nombreWorkout, String nombreEjercicio) {
-	        String descripcion = null;
+	public String mObtenerDescripcion(String nombreWorkout, String nombreEjercicio) {
+	    String descripcion = null;
+
+	    // Verificar si hay conexión a Internet
+	    if (new Principal().getInternet()) {
 	        Firestore co = null;
-	        
+
 	        try {
 	            // Conexión a Firestore
-	        	co = ConexionDB.conectar();
-	            
+	            co = ConexionDB.conectar();
+
 	            // Referencia al documento de "workout"
 	            DocumentReference referenciaWorkout = co.collection("workouts").document(nombreWorkout);
-	            
+
 	            // Referencia a la subcolección "ejercicios" y al documento del ejercicio específico
-	            DocumentReference ejercicioRef = referenciaWorkout.collection(collectionName).document(nombreEjercicio);
-	            
+	            DocumentReference ejercicioRef = referenciaWorkout.collection("ejercicios").document(nombreEjercicio);
+
 	            // Obtener el documento del ejercicio
 	            ApiFuture<DocumentSnapshot> future = ejercicioRef.get();
 	            DocumentSnapshot documentoEjercicio = future.get();
-	            
+
 	            // Comprobar si el documento existe y obtener la descripción
 	            if (documentoEjercicio.exists()) {
 	                descripcion = documentoEjercicio.getString("descripcion");
 	            } else {
 	                System.out.println("El ejercicio no existe.");
 	            }
-	            
+
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
-	        
-	        return descripcion;
+
+	    } else {
+	        // Si no hay conexión, leer del backup local
+	        try {
+	            FileInputStream fic = new FileInputStream(WORKOUTSFILEROUTE);
+	            ObjectInputStream ois = new ObjectInputStream(fic);
+
+	            // Leer los workouts desde el backup
+	            @SuppressWarnings("unchecked")
+	            ArrayList<WorkOuts> listaWorkouts = (ArrayList<WorkOuts>) ois.readObject();
+	            ois.close();
+
+	            // Buscar el workout y ejercicio correspondiente
+	            for (WorkOuts workout : listaWorkouts) {
+	                if (workout.getNombre().equals(nombreWorkout)) {
+	                    for (Ejercicio ejercicio : workout.getEjercicios()) {
+	                        if (ejercicio.getNombre().equals(nombreEjercicio)) {
+	                            descripcion = ejercicio.getDescripcion(); // Obtener la descripción desde el backup
+	                            return descripcion;
+	                        }
+	                    }
+	                }
+	            }
+
+	        } catch (IOException | ClassNotFoundException e) {
+	            e.printStackTrace();
+	        }
 	    }
+
+	    return descripcion;
+	}
+	
 	// Método para obtener todos los ejercicios
 
 	public ArrayList<Ejercicio> mObtenerEjercicios(String coleccion, String nombreWorkout) {
